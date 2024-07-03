@@ -168,7 +168,11 @@ pub fn parse_line(line: &str) -> Result<Line> {
         },
         "blocker" => Line::Blocker {
             fade_time: args.get("fadetime").map(|d| d.parse().ok()).unwrap_or(None),
-            block: args.get("block").unwrap().parse()?,
+            block: args
+                .get("block")
+                .cloned()
+                .unwrap_or_else(|| "false".to_string())
+                .parse()?,
             r: args.get("r").map(|d| d.parse().ok()).unwrap_or(None),
             g: args.get("g").map(|d| d.parse().ok()).unwrap_or(None),
             b: args.get("b").map(|d| d.parse().ok()).unwrap_or(None),
