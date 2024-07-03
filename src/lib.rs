@@ -384,5 +384,5 @@ pub fn story_to_wiki(content: String) -> String {
     for (image, id) in backgrounds.iter() {
         images_header.push_str(&format!(" {{{{si|mode=bg|{}|{}}}}}", image, id));
     }
-    format!("{}\n\n\n{}", images_header, content)
+    format!("{}\n\n\n{}", images_header, content.trim())
 }
