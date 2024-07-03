@@ -36,7 +36,7 @@ pub enum Line {
         references: Vec<String>,
     },
     Blocker {
-        fade_time: f32,
+        fade_time: Option<u32>,
         block: bool,
         a: Option<f32>,
         r: Option<f32>,
@@ -167,7 +167,7 @@ pub fn parse_line(line: &str) -> Result<Line> {
                 .collect(),
         },
         "blocker" => Line::Blocker {
-            fade_time: args.get("fadetime").unwrap().parse()?,
+            fade_time: args.get("fadetime").map(|d| d.parse().ok()).unwrap_or(None),
             block: args.get("block").unwrap().parse()?,
             r: args.get("r").map(|d| d.parse().ok()).unwrap_or(None),
             g: args.get("g").map(|d| d.parse().ok()).unwrap_or(None),
@@ -245,21 +245,21 @@ pub fn story_to_wiki(content: String) -> String {
                 }
                 cleanup_open_tags(&mut content, &mut None, &mut is_narration, &mut is_subtitle);
                 if last_author.as_ref() == Some(&name) {
-                    content.push_str(&format!("<br/>{}", text));
+                    content.push_str(&format!("<br/>{}", text.trim()));
                 } else if last_author.is_none() {
-                    content.push_str(&format!("{{{{sc|{}|{}", name, text));
+                    content.push_str(&format!("{{{{sc|{}|{}", name, text.trim()));
                     last_author = Some(name);
                 } else {
-                    content.push_str(&format!("}}}}\n{{{{sc|{}|{}", name, text));
+                    content.push_str(&format!("}}}}\n{{{{sc|{}|{}", name, text.trim()));
                     last_author = Some(name);
                 }
             }
             Line::Narration { text } => {
                 cleanup_open_tags(&mut content, &mut last_author, &mut false, &mut is_subtitle);
                 if is_narration {
-                    content.push_str(&format!("<br/>{}", text));
+                    content.push_str(&format!("<br/>{}", text.trim()));
                 } else {
-                    content.push_str(&format!("{{{{sc|{}", text));
+                    content.push_str(&format!("{{{{sc|{}", text.trim()));
                     is_narration = true;
                 }
             }
@@ -274,9 +274,9 @@ pub fn story_to_wiki(content: String) -> String {
                     &mut false,
                 );
                 if is_subtitle {
-                    content.push_str(&format!("<br/>{}", text));
+                    content.push_str(&format!("<br/>{}", text.trim()));
                 } else {
-                    content.push_str(&format!("{{{{sc|{}", text));
+                    content.push_str(&format!("{{{{sc|{}", text.trim()));
                     is_subtitle = true;
                 }
             }
@@ -364,6 +364,12 @@ pub fn story_to_wiki(content: String) -> String {
             _ => {}
         }
     }
+    cleanup_open_tags(
+        &mut content,
+        &mut last_author,
+        &mut is_narration,
+        &mut is_subtitle,
+    );
 
     let mut images_header = "|chars = ".to_string();
     for char in characters {
