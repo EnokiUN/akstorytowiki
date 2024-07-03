@@ -161,7 +161,8 @@ pub fn parse_line(line: &str) -> Result<Line> {
         "predicate" => Line::Predicate {
             references: args
                 .get("references")
-                .unwrap()
+                .cloned()
+                .unwrap_or_else(|| "".to_string())
                 .split(';')
                 .map(|s| s.to_string())
                 .collect(),
@@ -307,6 +308,9 @@ pub fn story_to_wiki(content: String) -> String {
                     &mut is_narration,
                     &mut is_subtitle,
                 );
+                if references.is_empty() {
+                    continue;
+                }
                 if references.len() > 1 {
                     if current_options.len() == references.len() {
                         if content.ends_with("{{sc|mode=branchstart}}\n") {
@@ -336,11 +340,12 @@ pub fn story_to_wiki(content: String) -> String {
                     continue;
                 }
                 if options_len > 1 {
-                    if !content.ends_with("{{sc|mode=branchstart}}\n") {
-                        content.push_str("{{sc|mode=branch}}\n");
+                    if let Some(selection) = current_options.remove(&references[0]) {
+                        if !content.ends_with("{{sc|mode=branchstart}}\n") {
+                            content.push_str("{{sc|mode=branch}}\n");
+                        }
+                        content.push_str(&format!("{{{{sc|Doctor|{}}}}}\n", selection));
                     }
-                    let selection = current_options.remove(&references[0]).unwrap();
-                    content.push_str(&format!("{{{{sc|Doctor|{}}}}}\n", selection));
                 }
             }
             Line::Blocker { a, .. } => {
