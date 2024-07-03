@@ -38,67 +38,11 @@ pub enum Line {
     Blocker {
         fade_time: f32,
         block: bool,
-        r: u8,
-        g: u8,
-        b: u8,
-        a: u8,
+        a: Option<f32>,
+        r: Option<f32>,
+        g: Option<f32>,
+        b: Option<f32>,
     },
-    CharSlot {
-        slot: Option<String>,
-        name: Option<String>,
-        duration: Option<f32>,
-    },
-    PlayMusic {
-        intro: Option<String>,
-        key: String,
-        volume: f32,
-    },
-    Header {
-        fit_mode: String,
-        key: String,
-        is_skippable: bool,
-    },
-    PlaySound {
-        key: String,
-        volume: f32,
-        channel: Option<u8>,
-        r#loop: bool,
-    },
-    StopSound {
-        channel: Option<u8>,
-        fade_time: Option<f32>,
-    },
-    CameraShake {
-        x_strength: u32,
-        y_strength: u32,
-        vibrato: u32,
-        randomness: u32,
-        fadeout: bool,
-        block: bool,
-        duration: Option<f32>,
-    },
-    BgEffect {
-        name: Option<String>,
-        layer: Option<u32>,
-    },
-    Image {
-        image: Option<String>,
-        screen_adapt: Option<String>,
-        fade_time: Option<f32>,
-    },
-    ImageTween {
-        x_scale_to: f32,
-        y_scale_to: f32,
-        x_scale_from: f32,
-        y_scale_from: f32,
-        duration: f32,
-        block: bool,
-    },
-    Delay {
-        time: f32,
-    },
-    StopMusic,
-    Dialog,
     Other {
         line_type: String,
         arguments: HashMap<String, String>,
@@ -225,95 +169,11 @@ pub fn parse_line(line: &str) -> Result<Line> {
         "blocker" => Line::Blocker {
             fade_time: args.get("fadetime").unwrap().parse()?,
             block: args.get("block").unwrap().parse()?,
-            r: args.get("r").unwrap().parse()?,
-            g: args.get("g").unwrap().parse()?,
-            b: args.get("b").unwrap().parse()?,
-            a: args.get("a").unwrap().parse()?,
+            r: args.get("r").map(|d| d.parse().ok()).unwrap_or(None),
+            g: args.get("g").map(|d| d.parse().ok()).unwrap_or(None),
+            b: args.get("b").map(|d| d.parse().ok()).unwrap_or(None),
+            a: args.get("a").map(|d| d.parse().ok()).unwrap_or(None),
         },
-        "charslot" => Line::CharSlot {
-            slot: args.get("slot").cloned(),
-            name: args.get("name").cloned(),
-            duration: args.get("duration").map(|d| d.parse().ok()).unwrap_or(None),
-        },
-        "playmusic" => Line::PlayMusic {
-            intro: args.get("intro").cloned(),
-            key: args.get("key").unwrap().to_string(),
-            volume: args
-                .get("time")
-                .cloned()
-                .unwrap_or_else(|| "1.0".to_string())
-                .parse()?,
-        },
-        "header" => Line::Header {
-            fit_mode: args.get("fit_mode").unwrap().to_string(),
-            key: args.get("key").unwrap().to_string(),
-            is_skippable: args
-                .get("is_skippable")
-                .cloned()
-                .unwrap_or_else(|| "false".to_string())
-                .parse()?,
-        },
-        "delay" => Line::Delay {
-            time: args.get("time").unwrap().parse()?,
-        },
-        "playsound" => Line::PlaySound {
-            key: args.get("key").unwrap().to_string(),
-            volume: args
-                .get("volume")
-                .cloned()
-                .unwrap_or_else(|| "1.0".to_string())
-                .parse()?,
-            channel: args.get("channel").map(|d| d.parse().ok()).unwrap_or(None),
-            r#loop: args
-                .get("loop")
-                .cloned()
-                .unwrap_or_else(|| "false".to_string())
-                .parse()?,
-        },
-        "stopsound" => Line::StopSound {
-            channel: args.get("channel").map(|d| d.parse().ok()).unwrap_or(None),
-            fade_time: args.get("fadetime").map(|d| d.parse().ok()).unwrap_or(None),
-        },
-        "camerashake" => Line::CameraShake {
-            x_strength: args.get("xstrength").unwrap().parse()?,
-            y_strength: args.get("ystrength").unwrap().parse()?,
-            vibrato: args.get("vibrato").unwrap().parse()?,
-            randomness: args.get("vibrato").unwrap().parse()?,
-            fadeout: args
-                .get("fadeout")
-                .cloned()
-                .unwrap_or_else(|| "false".to_string())
-                .parse()?,
-            block: args
-                .get("block")
-                .cloned()
-                .unwrap_or_else(|| "false".to_string())
-                .parse()?,
-            duration: args.get("duration").map(|d| d.parse().ok()).unwrap_or(None),
-        },
-        "bgeffect" => Line::BgEffect {
-            name: args.get("name").cloned(),
-            layer: args.get("duration").map(|d| d.parse().ok()).unwrap_or(None),
-        },
-        "image" => Line::Image {
-            image: args.get("image").cloned(),
-            screen_adapt: args.get("screenadapt").cloned(),
-            fade_time: args.get("fadetime").map(|d| d.parse().ok()).unwrap_or(None),
-        },
-        "imagetween" => Line::ImageTween {
-            x_scale_to: args.get("xScaleTo").unwrap().parse()?,
-            y_scale_to: args.get("yScaleTo").unwrap().parse()?,
-            x_scale_from: args.get("xScaleFrom").unwrap().parse()?,
-            y_scale_from: args.get("xScaleFrom").unwrap().parse()?,
-            duration: args.get("duration").unwrap().parse()?,
-            block: args
-                .get("block")
-                .cloned()
-                .unwrap_or_else(|| "false".to_string())
-                .parse()?,
-        },
-        "stopmusic" => Line::StopMusic,
-        "dialog" => Line::Dialog,
         _ => Line::Other {
             line_type,
             arguments: args,
@@ -480,7 +340,7 @@ pub fn story_to_wiki(content: String) -> String {
                 }
             }
             Line::Blocker { a, .. } => {
-                if a == 1 {
+                if a == Some(1.0) {
                     cleanup_open_tags(
                         &mut content,
                         &mut last_author,
