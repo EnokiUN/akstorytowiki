@@ -352,6 +352,7 @@ pub fn story_to_wiki(content: String) -> String {
     let mut is_narration = false;
     let mut is_subtitle = false;
     let mut current_options = HashMap::new();
+    let mut options_len = 0;
 
     for line in lines {
         match line {
@@ -426,8 +427,9 @@ pub fn story_to_wiki(content: String) -> String {
                     &mut is_narration,
                     &mut is_subtitle,
                 );
+                current_options = options.clone();
+                options_len = options.len();
                 if options.len() > 1 {
-                    current_options = options;
                     content.push_str("{{sc|mode=branchstart}}\n");
                 } else {
                     let selection = options.iter().next().unwrap().1;
@@ -442,17 +444,40 @@ pub fn story_to_wiki(content: String) -> String {
                     &mut is_subtitle,
                 );
                 if references.len() > 1 {
-                    content.push_str("{{sc|mode=branchend}}\n");
+                    if current_options.len() == references.len() {
+                        if content.ends_with("{{sc|mode=branchstart}}\n") {
+                            content = content
+                                .strip_suffix("{{sc|mode=branchstart}}\n")
+                                .unwrap()
+                                .to_string();
+                            let mut line_content = current_options
+                                .clone()
+                                .into_iter()
+                                .map(|(i, v)| (i.parse().unwrap(), v))
+                                .collect::<Vec<(u32, String)>>();
+                            line_content.sort_by(|a, b| a.0.cmp(&b.0));
+                            let line_content = line_content
+                                .into_iter()
+                                .map(|(_, v)| v)
+                                .collect::<Vec<String>>()
+                                .join(" / ");
+                            content.push_str(&format!("{{{{sc|Doctor|{}}}}}\n", line_content));
+                        }
+                    } else {
+                        content.push_str("{{sc|mode=branchend}}\n");
+                    }
                     continue;
                 }
                 if current_options.is_empty() {
                     continue;
                 }
-                if !content.ends_with("{{sc|mode=branchstart}}\n") {
-                    content.push_str("{{sc|mode=branch}}\n");
+                if options_len > 1 {
+                    if !content.ends_with("{{sc|mode=branchstart}}\n") {
+                        content.push_str("{{sc|mode=branch}}\n");
+                    }
+                    let selection = current_options.remove(&references[0]).unwrap();
+                    content.push_str(&format!("{{{{sc|Doctor|{}}}}}\n", selection));
                 }
-                let selection = current_options.remove(&references[0]).unwrap();
-                content.push_str(&format!("{{{{sc|Doctor|{}}}}}\n", selection));
             }
             Line::Blocker { a, .. } => {
                 if a == 1 {
