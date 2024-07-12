@@ -20,6 +20,9 @@ pub enum Line {
     Narration {
         text: String,
     },
+    Sticker {
+        text: Option<String>,
+    },
     Subtitle {
         text: Option<String>,
         x: Option<u32>,
@@ -135,6 +138,9 @@ pub fn parse_line(line: &str) -> Result<Line> {
             text: content,
         },
         "narration" => Line::Narration { text: content },
+        "sticker" => Line::Sticker {
+            text: args.get("text").cloned(),
+        },
         "subtitle" => Line::Subtitle {
             text: args.get("text").cloned(),
             x: args.get("x").map(|d| d.parse().ok()).unwrap_or(None),
@@ -259,7 +265,7 @@ pub fn story_to_wiki(content: String) -> String {
                     last_author = Some(name);
                 }
             }
-            Line::Narration { text } => {
+            Line::Narration { text } | Line::Sticker { text: Some(text) } => {
                 cleanup_open_tags(&mut content, &mut last_author, &mut false, &mut is_subtitle);
                 if is_narration {
                     content.push_str(&format!("<br/>{}", text.trim()));
