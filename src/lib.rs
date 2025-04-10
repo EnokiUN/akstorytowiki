@@ -25,12 +25,12 @@ pub enum Line {
     },
     Subtitle {
         text: Option<String>,
-        x: Option<u32>,
-        y: Option<u32>,
-        size: Option<u32>,
-        width: Option<u32>,
-        alignment: Option<String>,
-        delay: Option<f32>,
+        // x: Option<u32>,
+        // y: Option<u32>,
+        // size: Option<u32>,
+        // width: Option<u32>,
+        // alignment: Option<String>,
+        // delay: Option<f32>,
     },
     Decision {
         options: HashMap<String, String>,
@@ -143,12 +143,12 @@ pub fn parse_line(line: &str) -> Result<Line> {
         },
         "subtitle" => Line::Subtitle {
             text: args.get("text").cloned(),
-            x: args.get("x").map(|d| d.parse().ok()).unwrap_or(None),
-            y: args.get("y").map(|d| d.parse().ok()).unwrap_or(None),
-            size: args.get("size").map(|d| d.parse().ok()).unwrap_or(None),
-            width: args.get("width").map(|d| d.parse().ok()).unwrap_or(None),
-            alignment: args.get("alignment").cloned(),
-            delay: args.get("delay").map(|d| d.parse().ok()).unwrap_or(None),
+            //x: args.get("x").map(|d| d.parse().ok()).unwrap_or(None),
+            //y: args.get("y").map(|d| d.parse().ok()).unwrap_or(None),
+            //size: args.get("size").map(|d| d.parse().ok()).unwrap_or(None),
+            //width: args.get("width").map(|d| d.parse().ok()).unwrap_or(None),
+            //alignment: args.get("alignment").cloned(),
+            //delay: args.get("delay").map(|d| d.parse().ok()).unwrap_or(None),
         },
         "decision" => Line::Decision {
             options: args
@@ -184,6 +184,20 @@ pub fn parse_line(line: &str) -> Result<Line> {
             g: args.get("g").map(|d| d.parse().ok()).unwrap_or(None),
             b: args.get("b").map(|d| d.parse().ok()).unwrap_or(None),
             a: args.get("a").map(|d| d.parse().ok()).unwrap_or(None),
+        },
+        "animtext" => Line::Subtitle {
+            text: Some(
+                content
+                    .replace("</>", "")
+                    .replace("<p=1>", "")
+                    .split("<p=2>")
+                    .map(|p| p.to_string())
+                    .collect::<Vec<String>>()
+                    .into_iter()
+                    .rev()
+                    .collect::<Vec<String>>()
+                    .join("<br/>"),
+            ),
         },
         _ => Line::Other {
             line_type,
