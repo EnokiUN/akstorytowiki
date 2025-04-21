@@ -402,12 +402,14 @@ pub fn story_to_wiki(content: String) -> String {
 
     let mut images_header = "|chars = ".to_string();
     for char in characters {
-        images_header.push_str(&format!(" {{{{si|mode=char|{}}}}}", char));
+        images_header.push_str(&format!("{{{{si|mode=char|{}}}}}", char));
     }
     images_header = images_header.trim().to_string();
     images_header.push_str("|\n|bgs = ");
-    for (image, id) in backgrounds.iter() {
-        images_header.push_str(&format!(" {{{{si|mode=bg|{}|{}}}}}", image, id));
+    let mut backgrounds_vec = backgrounds.into_iter().collect::<Vec<(String, usize)>>();
+    backgrounds_vec.sort_by(|t, o| t.1.cmp(&o.1));
+    for (image, id) in backgrounds_vec {
+        images_header.push_str(&format!("{{{{si|mode=bg|{}|{}}}}}", image, id));
     }
     format!("{}\n\n\n{}", images_header, content.trim())
 }
