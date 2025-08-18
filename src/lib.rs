@@ -121,28 +121,27 @@ pub fn parse_line(line: &str) -> Result<Line> {
 
     Ok(match line_type.as_str() {
         "background" => Line::Background {
-            image: args.get("image").cloned(),
-            screen_adapt: args.get("screenadapt").cloned(),
+            image: args.remove("image"),
+            screen_adapt: args.remove("screenadapt"),
             block: args
-                .get("block")
-                .cloned()
+                .remove("block")
                 .unwrap_or_else(|| "false".to_string())
                 .parse()?,
         },
         "multiline" => Line::Multiline {
-            name: args.get("name").unwrap().to_string(),
+            name: args.remove("name").unwrap(),
             text: content,
         },
         "line" => Line::Line {
-            name: args.get("name").unwrap().to_string(),
+            name: args.remove("name").unwrap(),
             text: content,
         },
         "narration" => Line::Narration { text: content },
         "sticker" => Line::Sticker {
-            text: args.get("text").cloned(),
+            text: args.remove("text"),
         },
         "subtitle" => Line::Subtitle {
-            text: args.get("text").cloned(),
+            text: args.remove("text"),
             //x: args.get("x").map(|d| d.parse().ok()).unwrap_or(None),
             //y: args.get("y").map(|d| d.parse().ok()).unwrap_or(None),
             //size: args.get("size").map(|d| d.parse().ok()).unwrap_or(None),
@@ -152,7 +151,7 @@ pub fn parse_line(line: &str) -> Result<Line> {
         },
         "decision" => Line::Decision {
             options: args
-                .get("values")
+                .remove("values")
                 .unwrap()
                 .split(';')
                 .map(|s| s.to_string())
@@ -166,24 +165,25 @@ pub fn parse_line(line: &str) -> Result<Line> {
         },
         "predicate" => Line::Predicate {
             references: args
-                .get("references")
-                .cloned()
+                .remove("references")
                 .unwrap_or_else(|| "".to_string())
                 .split(';')
                 .map(|s| s.to_string())
                 .collect(),
         },
         "blocker" => Line::Blocker {
-            fade_time: args.get("fadetime").map(|d| d.parse().ok()).unwrap_or(None),
+            fade_time: args
+                .remove("fadetime")
+                .map(|d| d.parse().ok())
+                .unwrap_or(None),
             block: args
-                .get("block")
-                .cloned()
+                .remove("block")
                 .unwrap_or_else(|| "false".to_string())
                 .parse()?,
-            r: args.get("r").map(|d| d.parse().ok()).unwrap_or(None),
-            g: args.get("g").map(|d| d.parse().ok()).unwrap_or(None),
-            b: args.get("b").map(|d| d.parse().ok()).unwrap_or(None),
-            a: args.get("a").map(|d| d.parse().ok()).unwrap_or(None),
+            r: args.remove("r").map(|d| d.parse().ok()).unwrap_or(None),
+            g: args.remove("g").map(|d| d.parse().ok()).unwrap_or(None),
+            b: args.remove("b").map(|d| d.parse().ok()).unwrap_or(None),
+            a: args.remove("a").map(|d| d.parse().ok()).unwrap_or(None),
         },
         "animtext" => Line::Subtitle {
             text: Some(
