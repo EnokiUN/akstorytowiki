@@ -281,10 +281,11 @@ pub fn story_to_wiki(content: String) -> String {
             }
             Line::Narration { text } | Line::Sticker { text: Some(text) } => {
                 cleanup_open_tags(&mut content, &mut last_author, &mut false, &mut is_subtitle);
+                let text = text.trim().replace("\\n", "");
                 if is_narration {
-                    content.push_str(&format!("<br/>{}", text.trim()));
+                    content.push_str(&format!("<br/>{}", text));
                 } else {
-                    content.push_str(&format!("{{{{sc|{}", text.trim()));
+                    content.push_str(&format!("{{{{sc|{}", text));
                     is_narration = true;
                 }
             }
