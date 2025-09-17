@@ -46,6 +46,9 @@ pub enum Line {
         g: Option<f32>,
         b: Option<f32>,
     },
+    Image {
+        image: Option<String>,
+    },
     Other {
         line_type: String,
         arguments: HashMap<String, String>,
@@ -198,6 +201,9 @@ pub fn parse_line(line: &str) -> Result<Line> {
                     .collect::<Vec<String>>()
                     .join("<br/>"),
             ),
+        },
+        "image" => Line::Image {
+            image: args.remove("image"),
         },
         _ => Line::Other {
             line_type,
@@ -380,6 +386,9 @@ pub fn story_to_wiki(content: String) -> String {
                     content.push_str("{{sc|fades out and in|mode=background}}\n");
                 }
             }
+            Line::Image { image: Some(image) } => {
+                content.push_str(&format!("{{{{sc|{}|mode=image}}}}\n", image));
+            }
             //Line::PlaySound { key, .. } => {
             //if last_author.is_some() {
             //content.push_str("}}\n");
@@ -389,7 +398,7 @@ pub fn story_to_wiki(content: String) -> String {
             //content.push_str("}}\n");
             //is_subtitle = false;
             //}
-            //content.push_str(&format!("{{{{sc|Audio - {}|mode=action}}}}\n", key));
+            //content.push_str(&format!("{{{{sc|SFX|{}|mode=action}}}}\n", key));
             //}
             _ => {}
         }
