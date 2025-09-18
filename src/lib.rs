@@ -387,6 +387,12 @@ pub fn story_to_wiki(content: String) -> String {
                 }
             }
             Line::Image { image: Some(image) } => {
+                cleanup_open_tags(
+                    &mut content,
+                    &mut last_author,
+                    &mut is_narration,
+                    &mut is_subtitle,
+                );
                 content.push_str(&format!("{{{{sc|{}|mode=image}}}}\n", image));
             }
             //Line::PlaySound { key, .. } => {
