@@ -49,6 +49,10 @@ pub enum Line {
     Image {
         image: Option<String>,
     },
+    CameraEffect {
+        effect: Option<String>,
+        amount: f32,
+    },
     Other {
         line_type: String,
         arguments: HashMap<String, String>,
@@ -204,6 +208,13 @@ pub fn parse_line(line: &str) -> Result<Line> {
         },
         "image" => Line::Image {
             image: args.remove("image"),
+        },
+        "cameraeffect" => Line::CameraEffect {
+            effect: args.remove("effect").map(|e| e.to_lowercase()),
+            amount: args
+                .remove("amount")
+                .and_then(|f| f.parse().ok())
+                .unwrap_or(0.0),
         },
         _ => Line::Other {
             line_type,
@@ -394,6 +405,24 @@ pub fn story_to_wiki(content: String) -> String {
                     &mut is_subtitle,
                 );
                 content.push_str(&format!("{{{{sc|{}|mode=image}}}}\n", image));
+            }
+            Line::CameraEffect {
+                effect: Some(effect),
+                amount,
+            } => {
+                if effect == "grayscale" {
+                    cleanup_open_tags(
+                        &mut content,
+                        &mut last_author,
+                        &mut is_narration,
+                        &mut is_subtitle,
+                    );
+                    if amount == 0.0 {
+                        content.push_str("{{sc|mode=flashbackend}}\n");
+                    } else {
+                        content.push_str("{{sc|mode=flashbackstart}}\n");
+                    }
+                }
             }
             //Line::PlaySound { key, .. } => {
             //if last_author.is_some() {
