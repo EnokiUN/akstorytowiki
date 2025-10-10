@@ -1,6 +1,8 @@
 use std::collections::HashMap;
 
 use anyhow::{Context, Result};
+use lazy_static::lazy_static;
+use regex::Regex;
 
 #[derive(Debug)]
 pub enum Line {
@@ -324,7 +326,7 @@ pub fn story_to_wiki(content: String) -> String {
                 }
             }
             Line::Decision { options } => {
-                if !characters.contains(&"Doctor") {
+                if !characters.contains(&"Doctor".to_string()) {
                     characters.push("Doctor".to_string());
                 }
                 cleanup_open_tags(
@@ -459,5 +461,13 @@ pub fn story_to_wiki(content: String) -> String {
     for (image, id) in backgrounds_vec {
         images_header.push_str(&format!("{{{{si|mode=bg|{}|{}}}}}", image, id));
     }
-    format!("{}\n\n\n{}", images_header, content.trim())
+
+    lazy_static! {
+        static ref COLOUR_REGEX: Regex =
+            Regex::new(r"<color=#(?<color>.+?)>(?<text>.+?)</color>").unwrap();
+    };
+
+    let processed = COLOUR_REGEX.replace_all(content.trim(), "{Color|$text|code=$color}");
+
+    format!("{}\n\n\n{}", images_header, processed)
 }
