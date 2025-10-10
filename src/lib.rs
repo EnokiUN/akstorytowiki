@@ -324,6 +324,9 @@ pub fn story_to_wiki(content: String) -> String {
                 }
             }
             Line::Decision { options } => {
+                if !characters.contains(&"Doctor") {
+                    characters.push("Doctor".to_string());
+                }
                 cleanup_open_tags(
                     &mut content,
                     &mut last_author,
@@ -450,7 +453,7 @@ pub fn story_to_wiki(content: String) -> String {
         images_header.push_str(&format!("{{{{si|mode=char|{}}}}}", char));
     }
     images_header = images_header.trim().to_string();
-    images_header.push_str("|\n|bgs = ");
+    images_header.push_str("\n|bgs = ");
     let mut backgrounds_vec = backgrounds.into_iter().collect::<Vec<(String, usize)>>();
     backgrounds_vec.sort_by(|t, o| t.1.cmp(&o.1));
     for (image, id) in backgrounds_vec {
