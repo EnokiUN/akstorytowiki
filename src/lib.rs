@@ -467,7 +467,9 @@ pub fn story_to_wiki(content: String) -> String {
             Regex::new(r"<color=#(?<color>.+?)>(?<text>.+?)</color>").unwrap();
     };
 
-    let processed = COLOUR_REGEX.replace_all(content.trim(), "{Color|$text|code=$color}");
+    let processed = COLOUR_REGEX
+        .replace_all(content.trim(), "{Color|$text|code=$color}")
+        .replace("code=000000", "code=888");
 
     format!("{}\n\n\n{}", images_header, processed)
 }
