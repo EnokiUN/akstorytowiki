@@ -468,7 +468,7 @@ pub fn story_to_wiki(content: String) -> String {
     };
 
     let processed = COLOUR_REGEX
-        .replace_all(content.trim(), "{Color|$text|code=$color}")
+        .replace_all(content.trim(), "{{Color|$text|code=$color}}")
         .replace("code=000000", "code=888");
 
     format!("{}\n\n\n{}", images_header, processed)
