@@ -459,7 +459,7 @@ pub fn story_to_wiki(content: String) -> String {
     let mut backgrounds_vec = backgrounds.into_iter().collect::<Vec<(String, usize)>>();
     backgrounds_vec.sort_by(|t, o| t.1.cmp(&o.1));
     for (image, id) in backgrounds_vec {
-        images_header.push_str(&format!("{{{{si|mode=bg|{}|{}}}}}", image, id));
+        images_header.push_str(&format!("{{{{si|mode=bgimage|{}|{}}}}}", image, id));
     }
 
     lazy_static! {
