@@ -249,9 +249,17 @@ pub fn story_to_wiki(content: String) -> String {
     let lines: Vec<Line> = content.lines().map(|l| parse_line(l).unwrap()).collect();
 
     let mut content = String::new();
-    // TODO: change this to a BTreeSet
+    // nolongertodo: change this to a BTreeSet
     // TBH I do not know why it's a hashmap, I assume it was neccesarry for something in the past
     // but that thing doesn't exist anymore ¯\_(ツ)_/¯
+    //
+    // Update: BTreeSet doesn't have native index finding that isn't "heinously" slow (Like O(n))
+    // There *are* crates to get you O(log(n)) index lookups but I'd rather keep dependencies to a
+    // minimum.
+    //
+    // Vector would work but then you'd have to do an index lookup every time you want to use a
+    // background so comically the hashmap that just stores the first appearance index is quite a
+    // sufficient approach :/
     let mut backgrounds = HashMap::new();
     let mut last_background = String::new();
     let mut characters = vec![];
