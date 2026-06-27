@@ -249,6 +249,9 @@ pub fn story_to_wiki(content: String) -> String {
     let lines: Vec<Line> = content.lines().map(|l| parse_line(l).unwrap()).collect();
 
     let mut content = String::new();
+    // TODO: change this to a BTreeSet
+    // TBH I do not know why it's a hashmap, I assume it was neccesarry for something in the past
+    // but that thing doesn't exist anymore ¯\_(ツ)_/¯
     let mut backgrounds = HashMap::new();
     let mut last_background = String::new();
     let mut characters = vec![];
@@ -268,19 +271,32 @@ pub fn story_to_wiki(content: String) -> String {
                     &mut is_narration,
                     &mut is_subtitle,
                 );
-                if !backgrounds.contains_key(&image) {
-                    backgrounds.insert(image.clone(), backgrounds.len() + 1);
-                }
+
                 if content.ends_with("{{sc|fades out and in|mode=background}}\n") {
                     content = content
                         .strip_suffix("{{sc|fades out and in|mode=background}}\n")
                         .unwrap()
                         .to_string();
                 }
-                content.push_str(&format!(
-                    "{{{{sc|{}|mode=background}}}}\n",
-                    backgrounds.get(&image).unwrap()
-                ));
+
+                match image.as_str() {
+                    "bg_black" => {
+                        content.push_str("{{sc|Black|mode=background}}\n");
+                    }
+                    "bg_white" => {
+                        content.push_str("{{sc|White|mode=background}}\n");
+                    }
+                    _ => {
+                        if !backgrounds.contains_key(&image) {
+                            backgrounds.insert(image.clone(), backgrounds.len() + 1);
+                        }
+                        content.push_str(&format!(
+                            "{{{{sc|{}|mode=background}}}}\n",
+                            backgrounds.get(&image).unwrap()
+                        ));
+                    }
+                }
+
                 last_background = image;
             }
             Line::Line { name, text } | Line::Multiline { name, text } => {
