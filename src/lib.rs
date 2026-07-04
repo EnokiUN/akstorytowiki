@@ -465,7 +465,7 @@ pub fn story_to_wiki(content: String) -> String {
     images_header = images_header.trim().to_string();
     images_header.push_str("\n|bgs = ");
     for (i, image) in backgrounds.iter().enumerate() {
-        images_header.push_str(&format!("{{{{si|mode=bgimage|{}|{}}}}}", i + 1, image));
+        images_header.push_str(&format!("{{{{si|mode=bgimage|{}|{}}}}}", image, i + 1));
     }
 
     lazy_static! {
