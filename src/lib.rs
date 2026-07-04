@@ -284,7 +284,7 @@ pub fn story_to_wiki(content: String) -> String {
                         content.push_str("{{sc|White|mode=background}}\n");
                     }
                     _ => {
-                        content.push_str(&format!("{{{{sc|{}|mode=background}}}}\n", image));
+                        content.push_str(&format!("{{{{sc|{}|mode=image}}}}\n", image));
                         backgrounds.insert(image.clone());
                     }
                 }
