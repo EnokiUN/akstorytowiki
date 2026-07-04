@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::{BTreeSet, HashMap};
 
 use anyhow::{Context, Result};
 use lazy_static::lazy_static;
@@ -249,18 +249,7 @@ pub fn story_to_wiki(content: String) -> String {
     let lines: Vec<Line> = content.lines().map(|l| parse_line(l).unwrap()).collect();
 
     let mut content = String::new();
-    // nolongertodo: change this to a BTreeSet
-    // TBH I do not know why it's a hashmap, I assume it was neccesarry for something in the past
-    // but that thing doesn't exist anymore ¯\_(ツ)_/¯
-    //
-    // Update: BTreeSet doesn't have native index finding that isn't "heinously" slow (Like O(n))
-    // There *are* crates to get you O(log(n)) index lookups but I'd rather keep dependencies to a
-    // minimum.
-    //
-    // Vector would work but then you'd have to do an index lookup every time you want to use a
-    // background so comically the hashmap that just stores the first appearance index is quite a
-    // sufficient approach :/
-    let mut backgrounds = HashMap::new();
+    let mut backgrounds = BTreeSet::new();
     let mut last_background = String::new();
     let mut characters = vec![];
     let mut last_author = None;
@@ -295,13 +284,8 @@ pub fn story_to_wiki(content: String) -> String {
                         content.push_str("{{sc|White|mode=background}}\n");
                     }
                     _ => {
-                        if !backgrounds.contains_key(&image) {
-                            backgrounds.insert(image.clone(), backgrounds.len() + 1);
-                        }
-                        content.push_str(&format!(
-                            "{{{{sc|{}|mode=background}}}}\n",
-                            backgrounds.get(&image).unwrap()
-                        ));
+                        content.push_str(&format!("{{{{sc|{}|mode=background}}}}\n", image));
+                        backgrounds.insert(image.clone());
                     }
                 }
 
@@ -480,9 +464,7 @@ pub fn story_to_wiki(content: String) -> String {
     }
     images_header = images_header.trim().to_string();
     images_header.push_str("\n|bgs = ");
-    let mut backgrounds_vec = backgrounds.into_iter().collect::<Vec<(String, usize)>>();
-    backgrounds_vec.sort_by(|t, o| t.1.cmp(&o.1));
-    for (image, id) in backgrounds_vec {
+    for (image, id) in backgrounds.iter().enumerate() {
         images_header.push_str(&format!("{{{{si|mode=bgimage|{}|{}}}}}", image, id));
     }
 
