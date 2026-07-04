@@ -1,4 +1,4 @@
-use std::collections::{BTreeSet, HashMap};
+use std::collections::HashMap;
 
 use anyhow::{Context, Result};
 use lazy_static::lazy_static;
@@ -249,7 +249,7 @@ pub fn story_to_wiki(content: String) -> String {
     let lines: Vec<Line> = content.lines().map(|l| parse_line(l).unwrap()).collect();
 
     let mut content = String::new();
-    let mut backgrounds = BTreeSet::new();
+    let mut backgrounds = Vec::new();
     let mut last_background = String::new();
     let mut characters = vec![];
     let mut last_author = None;
@@ -285,7 +285,9 @@ pub fn story_to_wiki(content: String) -> String {
                     }
                     _ => {
                         content.push_str(&format!("{{{{sc|{}|mode=image}}}}\n", image));
-                        backgrounds.insert(image.clone());
+                        if !backgrounds.contains(&image) {
+                            backgrounds.push(image.clone());
+                        }
                     }
                 }
 
