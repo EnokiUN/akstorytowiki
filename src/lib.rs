@@ -55,6 +55,9 @@ pub enum Line {
         effect: Option<String>,
         amount: f32,
     },
+    ShowItem {
+        image: Option<String>,
+    },
     Other {
         line_type: String,
         arguments: HashMap<String, String>,
@@ -217,6 +220,9 @@ pub fn parse_line(line: &str) -> Result<Line> {
                 .remove("amount")
                 .and_then(|f| f.parse().ok())
                 .unwrap_or(0.0),
+        },
+        "showitem" => Line::ShowItem {
+            image: args.remove("image"),
         },
         _ => Line::Other {
             line_type,
@@ -416,7 +422,7 @@ pub fn story_to_wiki(content: String) -> String {
                     content.push_str("{{sc|fades out and in|mode=background}}\n");
                 }
             }
-            Line::Image { image: Some(image) } => {
+            Line::Image { image: Some(image) } | Line::ShowItem { image: Some(image) } => {
                 cleanup_open_tags(
                     &mut content,
                     &mut last_author,
