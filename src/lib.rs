@@ -12,7 +12,7 @@ pub enum Line {
         block: bool,
     },
     Multiline {
-        name: String,
+        name: Option<String>,
         text: String,
     },
     Line {
@@ -138,7 +138,7 @@ pub fn parse_line(line: &str) -> Result<Line> {
                 .parse()?,
         },
         "multiline" => Line::Multiline {
-            name: args.remove("name").unwrap(),
+            name: args.remove("name"),
             text: content,
         },
         "line" => Line::Line {
@@ -293,7 +293,11 @@ pub fn story_to_wiki(content: String) -> String {
 
                 last_background = image;
             }
-            Line::Line { name, text } | Line::Multiline { name, text } => {
+            Line::Line { name, text }
+            | Line::Multiline {
+                name: Some(name),
+                text,
+            } => {
                 if !characters.contains(&name) {
                     characters.push(name.clone());
                 }
