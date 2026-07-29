@@ -64,6 +64,11 @@ pub enum Line {
         fadetime: Option<f32>,
         focus: Option<u32>,
     },
+    Charslot {
+        slot: Option<String>,
+        name: Option<String>,
+        focus: Option<String>,
+    },
     Other {
         line_type: String,
         arguments: HashMap<String, String>,
@@ -236,6 +241,11 @@ pub fn parse_line(line: &str) -> Result<Line> {
             fadetime: args.remove("fadetime").and_then(|f| f.parse().ok()),
             focus: args.remove("focus").and_then(|f| f.parse().ok()),
         },
+        "charslot" => Line::Charslot {
+            slot: args.remove("slot"),
+            name: args.remove("name"),
+            focus: args.remove("focus"),
+        },
         _ => Line::Other {
             line_type,
             arguments: args,
@@ -322,11 +332,16 @@ pub fn story_to_wiki(content: String) -> String {
                 name: Some(name),
                 text,
             } => {
+                lazy_static! {
+                    static ref ICON_POSE_REGEX: Regex = Regex::new(r"#\d+").unwrap();
+                };
+
                 match characters.iter().position(|n| *n == name) {
                     None => {
                         characters.push(name.clone());
                         if !last_char_icon.is_empty() {
-                            character_icons.push(last_char_icon.clone());
+                            character_icons
+                                .push(ICON_POSE_REGEX.replace(&last_char_icon, "").to_string());
                             last_char_icon = String::new();
                         } else {
                             character_icons.push("TODO".to_string());
@@ -334,7 +349,8 @@ pub fn story_to_wiki(content: String) -> String {
                     }
                     Some(idx) => {
                         if character_icons[idx] == "TODO" && !last_char_icon.is_empty() {
-                            character_icons[idx] = last_char_icon.clone();
+                            character_icons[idx] =
+                                ICON_POSE_REGEX.replace(&last_char_icon, "").to_string();
                         }
                     }
                 }
@@ -485,17 +501,23 @@ pub fn story_to_wiki(content: String) -> String {
             Line::Character {
                 name, name2, focus, ..
             } => {
-                lazy_static! {
-                    static ref ICON_POSE_REGEX: Regex = Regex::new(r"#\d+").unwrap();
-                };
-
                 last_char_icon = match focus {
                     None | Some(1) => name,
                     Some(2) => name2,
                     _ => None,
                 }
-                .map(|n| ICON_POSE_REGEX.replace(&n, "").to_string())
                 .unwrap_or_else(String::new);
+            }
+            Line::Charslot {
+                slot,
+                name,
+                .. // apparently focus isn't required
+            } => {
+                if let Some(name) = name && slot.is_some() {
+                    last_char_icon = name;
+                } else {
+                    last_char_icon = String::new();
+                }
             }
             //Line::PlaySound { key, .. } => {
             //if last_author.is_some() {
