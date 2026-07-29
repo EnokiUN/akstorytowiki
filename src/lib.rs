@@ -58,6 +58,12 @@ pub enum Line {
     ShowItem {
         image: Option<String>,
     },
+    Character {
+        name: Option<String>,
+        name2: Option<String>,
+        fadetime: Option<f32>,
+        focus: Option<u32>,
+    },
     Other {
         line_type: String,
         arguments: HashMap<String, String>,
@@ -224,6 +230,12 @@ pub fn parse_line(line: &str) -> Result<Line> {
         "showitem" => Line::ShowItem {
             image: args.remove("image"),
         },
+        "character" => Line::Character {
+            name: args.remove("name"),
+            name2: args.remove("name2"),
+            fadetime: args.remove("fadetime").and_then(|f| f.parse().ok()),
+            focus: args.remove("focus").and_then(|f| f.parse().ok()),
+        },
         _ => Line::Other {
             line_type,
             arguments: args,
@@ -258,11 +270,13 @@ pub fn story_to_wiki(content: String) -> String {
     let mut backgrounds = Vec::new();
     let mut last_background = String::new();
     let mut characters = vec![];
+    let mut character_icons = vec![];
     let mut last_author = None;
     let mut is_narration = false;
     let mut is_subtitle = false;
     let mut current_options = HashMap::new();
     let mut options_len = 0;
+    let mut last_char_icon = String::new();
 
     for line in lines {
         match line {
@@ -304,9 +318,23 @@ pub fn story_to_wiki(content: String) -> String {
                 name: Some(name),
                 text,
             } => {
-                if !characters.contains(&name) {
-                    characters.push(name.clone());
+                match characters.iter().position(|n| *n == name) {
+                    None => {
+                        characters.push(name.clone());
+                        if !last_char_icon.is_empty() {
+                            character_icons.push(last_char_icon.clone());
+                            last_char_icon = String::new();
+                        } else {
+                            character_icons.push("TODO".to_string());
+                        }
+                    }
+                    Some(idx) => {
+                        if character_icons[idx] == "TODO" && !last_char_icon.is_empty() {
+                            character_icons[idx] = last_char_icon.clone();
+                        }
+                    }
                 }
+
                 cleanup_open_tags(&mut content, &mut None, &mut is_narration, &mut is_subtitle);
                 if last_author.as_ref() == Some(&name) {
                     content.push_str(&format!("<br/>{}", text.trim()));
@@ -402,13 +430,13 @@ pub fn story_to_wiki(content: String) -> String {
                 if current_options.is_empty() {
                     continue;
                 }
-                if options_len > 1 {
-                    if let Some(selection) = current_options.remove(&references[0]) {
-                        if !content.ends_with("{{sc|mode=branchstart}}\n") {
-                            content.push_str("{{sc|mode=branch}}\n");
-                        }
-                        content.push_str(&format!("{{{{sc|Doctor|{}}}}}\n", selection));
+                if let Some(selection) = current_options.remove(&references[0])
+                    && options_len > 1
+                {
+                    if !content.ends_with("{{sc|mode=branchstart}}\n") {
+                        content.push_str("{{sc|mode=branch}}\n");
                     }
+                    content.push_str(&format!("{{{{sc|Doctor|{}}}}}\n", selection));
                 }
             }
             Line::Blocker { a, .. } => {
@@ -449,6 +477,21 @@ pub fn story_to_wiki(content: String) -> String {
                     }
                 }
             }
+            Line::Character {
+                name, name2, focus, ..
+            } => {
+                lazy_static! {
+                    static ref ICON_POSE_REGEX: Regex = Regex::new(r"#\d+").unwrap();
+                };
+
+                last_char_icon = match focus {
+                    None | Some(1) => name,
+                    Some(2) => name2,
+                    _ => None,
+                }
+                .map(|n| ICON_POSE_REGEX.replace(&n, "").to_string())
+                .unwrap_or_else(String::new);
+            }
             //Line::PlaySound { key, .. } => {
             //if last_author.is_some() {
             //content.push_str("}}\n");
@@ -471,8 +514,8 @@ pub fn story_to_wiki(content: String) -> String {
     );
 
     let mut images_header = "|chars = ".to_string();
-    for char in characters {
-        images_header.push_str(&format!("{{{{si|mode=char|{}}}}}", char));
+    for (char, icon) in characters.iter().zip(character_icons) {
+        images_header.push_str(&format!("{{{{si|mode=char|{}|icon={}}}}}", char, icon));
     }
     images_header = images_header.trim().to_string();
     images_header.push_str("\n|bgs = ");
