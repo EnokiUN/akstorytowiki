@@ -264,7 +264,11 @@ fn cleanup_open_tags(
 }
 
 pub fn story_to_wiki(content: String) -> String {
-    let lines: Vec<Line> = content.lines().map(|l| parse_line(l).unwrap()).collect();
+    let lines: Vec<Line> = content
+        .lines()
+        .filter(|l| !l.is_empty())
+        .map(|l| parse_line(l).unwrap())
+        .collect();
 
     let mut content = String::new();
     let mut backgrounds = Vec::new();
@@ -376,6 +380,7 @@ pub fn story_to_wiki(content: String) -> String {
             Line::Decision { options } => {
                 if !characters.contains(&"Doctor".to_string()) {
                     characters.push("Doctor".to_string());
+                    character_icons.push("Doctor".to_string());
                 }
                 cleanup_open_tags(
                     &mut content,
