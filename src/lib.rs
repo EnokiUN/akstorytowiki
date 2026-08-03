@@ -69,6 +69,9 @@ pub enum Line {
         name: Option<String>,
         focus: Option<String>,
     },
+    PlaySound {
+        key: Option<String>,
+    },
     Other {
         line_type: String,
         arguments: HashMap<String, String>,
@@ -246,6 +249,9 @@ pub fn parse_line(line: &str) -> Result<Line> {
             name: args.remove("name"),
             focus: args.remove("focus"),
         },
+        "playsound" => Line::PlaySound {
+            key: args.remove("key"),
+        },
         _ => Line::Other {
             line_type,
             arguments: args,
@@ -253,6 +259,7 @@ pub fn parse_line(line: &str) -> Result<Line> {
     })
 }
 
+// TODO: this should probably be a closure inside story_to_wiki
 fn cleanup_open_tags(
     content: &mut String,
     last_author: &mut Option<String>,
@@ -519,17 +526,15 @@ pub fn story_to_wiki(content: String) -> String {
                     last_char_icon = String::new();
                 }
             }
-            //Line::PlaySound { key, .. } => {
-            //if last_author.is_some() {
-            //content.push_str("}}\n");
-            //last_author = None;
-            //}
-            //if is_subtitle {
-            //content.push_str("}}\n");
-            //is_subtitle = false;
-            //}
-            //content.push_str(&format!("{{{{sc|SFX|{}|mode=action}}}}\n", key));
-            //}
+            Line::PlaySound { key: Some(key) } => {
+                cleanup_open_tags(
+                    &mut content,
+                    &mut last_author,
+                    &mut is_narration,
+                    &mut is_subtitle,
+                );
+                content.push_str(&format!("{{{{sc|{}|mode=action}}}}\n", key.replace("$", "")));
+            }
             _ => {}
         }
     }
