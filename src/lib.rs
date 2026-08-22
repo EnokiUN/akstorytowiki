@@ -11,6 +11,9 @@ pub enum Line {
         screen_adapt: Option<String>,
         block: bool,
     },
+    GridBackground {
+        imagegroup: Option<String>,
+    },
     Multiline {
         name: Option<String>,
         text: String,
@@ -153,6 +156,9 @@ pub fn parse_line(line: &str) -> Result<Line> {
                 .remove("block")
                 .unwrap_or_else(|| "false".to_string())
                 .parse()?,
+        },
+        "gridbg" => Line::GridBackground {
+            imagegroup: args.remove("imagegroup"),
         },
         "multiline" => Line::Multiline {
             name: args.remove("name"),
@@ -299,6 +305,30 @@ pub fn story_to_wiki(content: String) -> String {
     let mut options_len = 0;
     let mut last_char_icon = String::new();
 
+    let mut process_bg = |content: &mut String, image: &String| {
+        if content.ends_with("{{sc|fades out and in|mode=background}}\n") {
+            *content = content
+                .strip_suffix("{{sc|fades out and in|mode=background}}\n")
+                .unwrap()
+                .to_string();
+        }
+
+        match image.as_str() {
+            "bg_black" => {
+                content.push_str("{{sc|Black|mode=background}}\n");
+            }
+            "bg_white" => {
+                content.push_str("{{sc|White|mode=background}}\n");
+            }
+            _ => {
+                content.push_str(&format!("{{{{sc|{}|mode=image}}}}\n", image));
+                if !backgrounds.contains(image) {
+                    backgrounds.push(image.to_string());
+                }
+            }
+        }
+    };
+
     for line in lines {
         match line {
             Line::Background { image, .. } => {
@@ -309,29 +339,21 @@ pub fn story_to_wiki(content: String) -> String {
                     &mut is_narration,
                     &mut is_subtitle,
                 );
+                process_bg(&mut content, &image);
+        last_background = image;
+            }
+            Line::GridBackground { imagegroup: Some(imagegroup) } => {
+                cleanup_open_tags(
+                    &mut content,
+                    &mut last_author,
+                    &mut is_narration,
+                    &mut is_subtitle,
+                );
 
-                if content.ends_with("{{sc|fades out and in|mode=background}}\n") {
-                    content = content
-                        .strip_suffix("{{sc|fades out and in|mode=background}}\n")
-                        .unwrap()
-                        .to_string();
-                }
+                let first_section = imagegroup.split_once("/").map(|s| s.0).unwrap_or(&imagegroup);
+                let image = first_section.rsplit_once("_").map(|s| s.0).unwrap_or(first_section).to_string();
 
-                match image.as_str() {
-                    "bg_black" => {
-                        content.push_str("{{sc|Black|mode=background}}\n");
-                    }
-                    "bg_white" => {
-                        content.push_str("{{sc|White|mode=background}}\n");
-                    }
-                    _ => {
-                        content.push_str(&format!("{{{{sc|{}|mode=image}}}}\n", image));
-                        if !backgrounds.contains(&image) {
-                            backgrounds.push(image.clone());
-                        }
-                    }
-                }
-
+                process_bg(&mut content, &image);
                 last_background = image;
             }
             Line::Line { name, text }
