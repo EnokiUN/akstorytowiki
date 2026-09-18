@@ -569,12 +569,15 @@ pub fn story_to_wiki(content: String) -> String {
 
     let mut images_header = "|chars = ".to_string();
     for (char, icon) in characters.iter().zip(character_icons) {
-        images_header.push_str(&format!("{{{{si|mode=char|{}|icon={}}}}}", char, icon));
+        images_header.push_str(&format!(
+            "{{{{si|mode=char|nolink=true|{}|icon={}}}}}\n",
+            char, icon
+        ));
     }
     images_header = images_header.trim().to_string();
     images_header.push_str("\n|bgs = ");
     for (i, image) in backgrounds.iter().enumerate() {
-        images_header.push_str(&format!("{{{{si|mode=bgimage|{}|{}}}}}", image, i + 1));
+        images_header.push_str(&format!("{{{{si|mode=bgimage|{}|{}}}}}\n", image, i + 1));
     }
 
     lazy_static! {
@@ -586,5 +589,5 @@ pub fn story_to_wiki(content: String) -> String {
         .replace_all(content.trim(), "{{Color|$text|code=$color}}")
         .replace("code=000000", "code=888");
 
-    format!("{}\n\n\n{}", images_header, processed)
+    format!("{}\n\n{}", images_header, processed)
 }
