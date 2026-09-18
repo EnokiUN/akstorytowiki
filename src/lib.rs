@@ -579,6 +579,7 @@ pub fn story_to_wiki(content: String) -> String {
     for (i, image) in backgrounds.iter().enumerate() {
         images_header.push_str(&format!("{{{{si|mode=bgimage|{}|{}}}}}\n", image, i + 1));
     }
+    images_header = images_header.trim().to_string();
 
     lazy_static! {
         static ref COLOUR_REGEX: Regex =
@@ -589,5 +590,8 @@ pub fn story_to_wiki(content: String) -> String {
         .replace_all(content.trim(), "{{Color|$text|code=$color}}")
         .replace("code=000000", "code=888");
 
-    format!("{}\n\n{}", images_header, processed)
+    format!(
+        "{{{{Story info\n|prevst = \n|prevint = \n|nextst = \n|nextint = \n{}}}}}\n\n{{{{Story Head|}}}}\n{}",
+        images_header, processed
+    )
 }
