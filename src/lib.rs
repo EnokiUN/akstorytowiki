@@ -570,7 +570,7 @@ pub fn story_to_wiki(content: String) -> String {
     let mut images_header = "|chars = ".to_string();
     for (char, icon) in characters.iter().zip(character_icons) {
         images_header.push_str(&format!(
-            "{{{{si|mode=char|nolink=true|{}|icon={}}}}}\n",
+            "{{{{si|mode=char|{}|nolink=true|icon={}}}}}\n",
             char, icon
         ));
     }
