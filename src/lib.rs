@@ -303,6 +303,7 @@ pub fn story_to_wiki(content: String) -> String {
     let mut is_subtitle = false;
     let mut current_options = HashMap::new();
     let mut options_len = 0;
+    let mut charslots = HashMap::new();
     let mut last_char_icon = String::new();
 
     let mut process_bg = |content: &mut String, image: &String| {
@@ -340,9 +341,11 @@ pub fn story_to_wiki(content: String) -> String {
                     &mut is_subtitle,
                 );
                 process_bg(&mut content, &image);
-        last_background = image;
+                last_background = image;
             }
-            Line::GridBackground { imagegroup: Some(imagegroup) } => {
+            Line::GridBackground {
+                imagegroup: Some(imagegroup),
+            } => {
                 cleanup_open_tags(
                     &mut content,
                     &mut last_author,
@@ -350,8 +353,15 @@ pub fn story_to_wiki(content: String) -> String {
                     &mut is_subtitle,
                 );
 
-                let first_section = imagegroup.split_once("/").map(|s| s.0).unwrap_or(&imagegroup);
-                let image = first_section.rsplit_once("_").map(|s| s.0).unwrap_or(first_section).to_string();
+                let first_section = imagegroup
+                    .split_once("/")
+                    .map(|s| s.0)
+                    .unwrap_or(&imagegroup);
+                let image = first_section
+                    .rsplit_once("_")
+                    .map(|s| s.0)
+                    .unwrap_or(first_section)
+                    .to_string();
 
                 process_bg(&mut content, &image);
                 last_background = image;
@@ -537,15 +547,25 @@ pub fn story_to_wiki(content: String) -> String {
                 }
                 .unwrap_or_else(String::new);
             }
-            Line::Charslot {
-                slot,
-                name,
-                .. // apparently focus isn't required
-            } => {
-                if let Some(name) = name && slot.is_some() {
-                    last_char_icon = name;
-                } else {
+            Line::Charslot { slot, name, focus } => {
+                if slot.is_none() && name.is_none() && focus.is_none() {
+                    charslots.drain();
                     last_char_icon = String::new();
+                    continue;
+                }
+
+                if let Some(mut slot) = slot {
+                    slot = slot.to_lowercase();
+                    if let Some(name) = name {
+                        charslots.insert(slot.clone(), name);
+                    }
+                    last_char_icon = charslots.get(&slot).cloned().unwrap_or_else(String::new);
+                }
+                if let Some(focus) = focus {
+                    last_char_icon = charslots
+                        .get(&focus.to_lowercase())
+                        .cloned()
+                        .unwrap_or_else(String::new);
                 }
             }
             Line::PlaySound { key: Some(key) } => {
@@ -555,7 +575,10 @@ pub fn story_to_wiki(content: String) -> String {
                     &mut is_narration,
                     &mut is_subtitle,
                 );
-                content.push_str(&format!("{{{{sc|{}|mode=action}}}}\n", key.replace("$", "")));
+                content.push_str(&format!(
+                    "{{{{sc|{}|mode=action}}}}\n",
+                    key.replace("$", "")
+                ));
             }
             _ => {}
         }
