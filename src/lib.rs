@@ -28,6 +28,9 @@ pub enum Line {
     Sticker {
         text: Option<String>,
     },
+    SpellSticker {
+        text: String,
+    },
     Subtitle {
         text: Option<String>,
         // x: Option<u32>,
@@ -172,6 +175,7 @@ pub fn parse_line(line: &str) -> Result<Line> {
         "sticker" => Line::Sticker {
             text: args.remove("text"),
         },
+        "spellsticker" => Line::SpellSticker { text: content },
         "subtitle" => Line::Subtitle {
             text: args.remove("text"),
             //x: args.get("x").map(|d| d.parse().ok()).unwrap_or(None),
@@ -413,6 +417,22 @@ pub fn story_to_wiki(content: String) -> String {
                 } else {
                     content.push_str(&format!("{{{{sc|{}", text));
                     is_narration = true;
+                }
+            }
+            Line::SpellSticker { text } => {
+                cleanup_open_tags(
+                    &mut content,
+                    &mut last_author,
+                    &mut is_narration,
+                    &mut is_subtitle,
+                );
+                match text.replace("</>", "").split_once("<p=2>") {
+                    Some((p1, p2)) => content.push_str(&format!(
+                        "{{{{sc|{}<br/>{}|mode=subtitle}}}}\n",
+                        p1.replace("<p=1>", "").trim(),
+                        p2.trim()
+                    )),
+                    None => content.push_str(&format!("{{{{sc|{}|mode=subtitle}}}}\n", text)),
                 }
             }
             Line::Subtitle { text, .. } => {
