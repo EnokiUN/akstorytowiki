@@ -634,7 +634,7 @@ pub fn story_to_wiki(content: String) -> String {
         .replace("code=000000", "code=888");
 
     format!(
-        "{{{{Story info\n|prevst = \n|prevint = \n|nextst = \n|nextint = \n{}}}}}\n\n{{{{Story head|}}}}\n{}",
+        "{{{{Story info\n|prevst = \n|prevint = \n|nextst = \n|nextint = \n{}}}}}\n\n{{{{Story head|}}}}\n{}\n\n{{{{Table End}}}}",
         images_header, processed
     )
 }
