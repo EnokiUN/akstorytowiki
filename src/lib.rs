@@ -631,10 +631,12 @@ pub fn story_to_wiki(content: String) -> String {
 
     let processed = COLOUR_REGEX
         .replace_all(content.trim(), "{{Color|$text|code=$color}}")
-        .replace("code=000000", "code=888");
+        .replace("code=000000", "code=888")
+        .trim_end_matches("\n{{sc|fades out and in|mode=background}}")
+        .to_string();
 
     format!(
-        "{{{{Story info\n|prevst = \n|prevint = \n|nextst = \n|nextint = \n{}}}}}\n\n{{{{Story head|}}}}\n{}\n\n{{{{Table End}}}}",
+        "{{{{Story info\n|prevst = \n|prevint = \n|nextst = \n|nextint = \n{}}}}}\n\n{{{{Story head|}}}}\n{}\n{{{{Table End}}}}",
         images_header, processed
     )
 }
